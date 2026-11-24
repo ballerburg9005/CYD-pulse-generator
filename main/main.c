@@ -21,7 +21,7 @@ static dac_oneshot_handle_t dac;
 static esp_timer_handle_t timer;
 static SemaphoreHandle_t lock;
 static bool logic_on,audio_on;
-static int64_t t0,deadline;
+static int64_t t0;
 static int8_t sine[256];
 static uint32_t rng=0x1337;
 static void sample(void *arg){
@@ -96,7 +96,7 @@ static void start(void){
         esp_err_t e=rmt_transmit(ch,enc,words,n/2*sizeof(words[0]),&tc);
         if(e!=ESP_OK){stop();ESP_LOGE("pulse","RMT start failed: %s",esp_err_to_name(e));return;}
     }
-    ui.running=true;deadline=esp_timer_get_time()+15000000LL;
+    ui.running=true;
 }
 static bool in(int x,int y,int l,int t,int w,int h){return x>=l&&x<l+w&&y>=t&&y<t+h;}
 static int clamp(int n,int lo,int hi){return n<lo?lo:n>hi?hi:n;}
@@ -130,7 +130,6 @@ void app_main(void){
     int64_t last_seen=0,marker_until=0;bool armed=true;
     for(;;){
         bool dirty=false;int64_t now=esp_timer_get_time();
-        if(ui.running&&now>=deadline){stop();dirty=true;armed=false;last_seen=now;}
         int x,y;
         if(screen_poll_touch(&x,&y)){
             last_seen=esp_timer_get_time();
