@@ -196,7 +196,7 @@ void screen_draw(const ui_state_t *s){
             }else{
                 button(20,126,138,32,"LEVEL -",false);button(162,126,138,32,"LEVEL +",false);
             }
-            button(22,174,276,43,"START / 15 SEC",true);
+            button(22,174,276,43,"START / CONTINUOUS",true);
             center(226,"BENCH ONLY / NO BODY CONNECTION",1,muted);
         }
         if(s->touch_feedback)rounded(s->touch_x-4,s->touch_y-4,9,9,4,ink);
