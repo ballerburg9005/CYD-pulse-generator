@@ -1,13 +1,10 @@
-# CYD pulse generator
+# CYD bench waveform generator
 
-A standalone **bench-only digital pulse-train generator** for the Sunton
-ESP32-2432S022C (ESP32-WROOM-32, ST7789 i80, CST816S). It is not a medical
-device or a stimulator. Do not connect it to people, animals, electrodes,
-or wearable stimulation hardware. USB/scope grounds are not isolated.
-Output is ordinary 3.3 V GPIO logic, not a calibrated current source.
+Standalone bench logic generator and onboard speaker audio tester for
+ESP32-2432S022C. **Not a medical device: do not connect to people, animals,
+electrodes or stimulation hardware.** USB/scope grounds are not isolated.
 
-## Build
-ESP-IDF v5.4.x (original clock used 5.4.4).
+## Build (ESP-IDF 5.4.4)
 
 ```sh
 git clone https://github.com/ballerburg9005/CYD-pulse-generator
@@ -18,55 +15,63 @@ idf.py build
 idf.py -p /dev/ttyUSB0 flash
 ```
 
-## Bench controls
-Frequency 1–1000 Hz; independent high time 10–10000 us in 10 us steps,
-automatically limited to less than the period. RMT hardware repeats the
-encoded period at nominal 1 us tick resolution without software toggling.
-The screen shows the requested frequency and quantized period, high time
-and duty cycle. Default is a generic 100 Hz / 1000 us test signal.
-START runs for at most 15 seconds; tap anywhere to stop early (after
-releasing START). Output is idle low, never starts on boot, and edits
-are possible only while stopped. The timeout is software-controlled,
-not a hardware safety interlock.
+## Modes and controls
 
-## Board notes
-Ported display/touch implementation from
-[CYD 100% Clock](https://github.com/ballerburg9005/cyd-100-percent-clock).
-No clock, RTC, Wi-Fi, SD filesystem, audio or composite video code.
+Tap the mode name to cycle. All modes have 0.5–40.0 Hz repetition,
+with 0.1 Hz and 5 Hz steps.
+
+| Mode | Adjustable parameters | Output |
+|---|---|---|
+| Logic pulse | high time 10–10000 us, steps 10/100 us | GPIO23 |
+| Speaker sine | source level | GPIO26 DAC and onboard amp |
+| Speaker triangle | source level | GPIO26 DAC and onboard amp |
+| Speaker square | source level | GPIO26 DAC and onboard amp |
+| Sine burst | 200–2000 Hz audio carrier, 10–90% gate | onboard speaker |
+| Square burst | same | onboard speaker |
+| Noise burst | gate percentage (carrier setting has no effect) | onboard speaker |
+
+Audio source level is a small digital DAC swing, not calibrated current or
+voltage. Audio sampling uses the task-dispatched 10 kHz esp_timer technique
+from the clock; jitter and aliasing must be measured. RMT logic uses nominal
+1 us timing resolution. No output starts automatically on boot. START
+runs approximately 15 seconds; release the START button then tap anywhere
+to stop. Parameters can be changed while stopped. Timeout is a software
+feature, not a hardware interlock.
+
+The onboard amplifier may filter out low frequencies or convert square
+edges into brief transients. HF here means audio-frequency carrier, not
+radio-frequency generation. It is not a DC-coupled arbitrary waveform
+instrument. Keep the stock speaker connected; do not attach external
+stimulation circuits or loads. **Never attach an earth-referenced scope
+ground clip to either speaker terminal** unless the exact topology is
+verified; use a correctly rated differential probe for speaker output.
+
+## Board configuration
+
+Reused driver from [CYD 100% Clock](https://github.com/ballerburg9005/cyd-100-percent-clock).
+ST7789 i80 display and CST816S touch; no composite, clock, Wi-Fi, RTC, TF,
+media player or contact code.
 
 | Function | GPIO |
 |---|---|
-| ST7789 D0..D7 | 15, 13, 12, 14, 27, 25, 33, 32 |
+| LCD D0..D7 | 15,13,12,14,27,25,33,32 |
 | LCD WR/DC/CS/RD | 4/16/17/2 |
 | Backlight | 0 |
-| CST816S I2C | SDA21/SCL22, address 0x15 |
-| Onboard speaker amplifier (unused) | 26 |
-| microSD (unused) | CS5, CLK18, MISO19, MOSI23 |
-| Bench output | GPIO23 (SD MOSI) |
+| CST816S touch (0x15) | SDA21/SCL22 |
+| Speaker DAC | 26 |
+| SD (unused) | CS5, CLK18, MISO19, MOSI23 |
+| Logic test signal | GPIO23 |
 
-GPIO25 is part of the LCD data bus. GPIO26 is connected to the onboard
-amplifier and is not a clean dedicated output. GPIO23 is chosen because
-the SD interface is unused in this firmware; remove the SD card before
-powering on. Confirm the board's actual MOSI test point or connector
-against its schematic/continuity before probing; access to this signal
-has not been physically verified. Use a high-impedance scope or logic
-analyzer only, with the board's logic ground. No external power or loads
-should be connected to the output. The device does not measure actual
-output voltage, current, timing or impedance; screen values are calculated.
+GPIO25 is occupied by LCD. Remove the SD card before powering on.
+Physical access to GPIO23 is unverified: identify its pad on the actual
+board schematic or by continuity with power off. Use high-impedance
+bench measurement only, not an external load.
 
-Landscape orientation retains the original 180-degree flip (TF/button at
-top) and 112% touch expansion. Controls are inset at least 20 px on both
-horizontal edges. The touch transformation is configurable in menuconfig.
-Touch edge expansion is a heuristic, not a measured calibration.
+Landscape 320x240, 180-degree rotation, 112% touch edge compensation,
+20 px horizontal button margins, visible touch dot. Orientation and
+compensation are configurable in menuconfig. Edge expansion is a heuristic.
 
-## Research context
-Published work uses low-frequency pulse trains, including the 10–12 Hz
-median nerve studies and 20 Hz auricular studies. See [research notes](RESEARCH.md)
-for references, not clinical settings or instructions. This project is
-for digital signal measurement only.
-
-## Validation
-Host timing tests: `cc -std=c11 -Wall -Wextra -Werror -I main tests/test_timing.c -o /tmp/cyd-timing && /tmp/cyd-timing`.
-CI builds ESP-IDF firmware. Actual hardware verification is still required:
-confirm orientation, touch, signal access, idle-low behavior, timing,
-stop behavior and UI responsiveness using only bench instruments.
+[Research notes](RESEARCH.md) are background, not clinical settings.
+No waveform or amplifier output has been measured on the physical board.
+GitHub Actions builds the ESP-IDF firmware; check the Actions tab for
+actual build status before flashing.
