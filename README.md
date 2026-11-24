@@ -34,10 +34,12 @@ Audio source level is a small digital DAC swing, not calibrated current or
 voltage. Audio sampling uses the task-dispatched 10 kHz esp_timer technique
 from the clock; jitter and aliasing must be measured. RMT logic uses nominal
 1 us timing resolution. No output starts automatically on boot. START
-runs approximately 15 seconds; release the START button then tap anywhere
-to stop. Parameters can be changed while stopped. Timeout is a software
-feature, not a hardware interlock.
+runs continuously for bench measurement until manually stopped; release
+START then tap anywhere to stop. Parameters can be changed while stopped.
+Keep the bench instrument attended while running.
 
+The reported chip marking is 8002A CO96IH.1N, consistent with a class-AB
+bridge-tied audio amplifier. Exact manufacturer and PCB coupling are unverified.
 The onboard amplifier may filter out low frequencies or convert square
 edges into brief transients. HF here means audio-frequency carrier, not
 radio-frequency generation. It is not a DC-coupled arbitrary waveform
