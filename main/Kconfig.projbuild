@@ -1,0 +1,35 @@
+menu "CYD pulse generator board adjustments"
+    config PULSE_LCD_ROTATE_CW
+        bool "Use S022C clockwise landscape mapping for LCD and touch"
+        default y
+    config PULSE_DISPLAY_FLIP_180
+        bool "Flip display and touch 180 degrees (button and TF card on top)"
+        default y
+        help
+            Turn the completed landscape user interface upside down relative
+            to the old layout. Applies equally to LCD and touch, so buttons
+            remain correctly mapped. Disable if your housing is reversed.
+    config PULSE_LCD_MIRROR_Y
+        bool "Mirror display vertically (if needed for your S022C revision)"
+        default n
+    config PULSE_TOUCH_SWAP_XY
+        bool "Swap X/Y capacitive touch coordinates"
+        default n
+    config PULSE_TOUCH_MIRROR_X
+        bool "Mirror touch X coordinate"
+        default n
+    config PULSE_TOUCH_MIRROR_Y
+        bool "Mirror touch Y coordinate"
+        default n
+    config PULSE_TOUCH_EDGE_GAIN
+        int "Touch edge expansion percent (100 = none)"
+        range 100 135
+        default 112
+        help
+            Stretch touch coordinates away from the centre to compensate
+            for a touchscreen whose detected range ends before the LCD bezel.
+            This is a provisional affine correction, not a measured
+            five-point calibration. Increase only if touch dots stop short
+            of the outer edges.
+
+endmenu
